@@ -153,9 +153,7 @@ describe('admintools', function ( ) {
 
       var d3 = require('d3');
       //disable all d3 transitions so most of the other code can run with jsdom
-      //d3.timer = function mockTimer() { };
-      let timer = d3.timer(function mockTimer() { });
-      timer.stop();
+      d3.timer = function mockTimer() { };
       
       var cookieStorageType = self.localStorage._type
 

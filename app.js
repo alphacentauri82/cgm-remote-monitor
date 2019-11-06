@@ -8,8 +8,37 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
 
+/*Start Refactoring code*/
+//Define packages
+const session = require("express-session"),
+mongostore = require("connect-mongo")(session),
+mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
+/*End   Refactoring code */
+
 function create (env, ctx) {
   var app = express();
+
+  /*Start Refactoring code*/
+  //Define global connection
+  var db = mongoose.connect(env.storageURI,
+  {
+    useNewUrlParser: true 
+  },function(err,res) {
+    if(err) {
+        console.log('ERROR: conecting to database. ' + err);
+    } else {
+        console.log('superdi: Mongoose connected');
+    }
+  });
+
+  //Persistant global connection
+  app.use(session({resave: true, saveUninitialized: true, secret: env.api_secret,store: new mongostore({ mongooseConnection: mongoose.connection })}));
+  var apirouter = express.Router();
+  require("./routes/api")(apirouter);
+  /*End Refactoring code*/
+
+  
   var appInfo = env.name + ' ' + env.version;
   app.set('title', appInfo);
   app.enable('trust proxy'); // Allows req.secure test on heroku https connections.
@@ -118,9 +147,7 @@ function create (env, ctx) {
   // api and json object variables
   ///////////////////////////////////////////////////
   var api = require('./lib/api/')(env, ctx);
-  var api3 = require('./lib/api3/')(env, ctx);
   var ddata = require('./lib/data/endpoints')(env, ctx);
-  var notificationsV2 = require('./lib/api/notifications-v2')(app, ctx)
 
   app.use(compression({
     filter: function shouldCompress (req, res) {
@@ -170,16 +197,13 @@ function create (env, ctx) {
     limit: 1048576 * 50
   }), api);
 
-  app.use('/api/v2', bodyParser({
-    limit: 1048576 * 50
-  }), api);
-
   app.use('/api/v2/properties', ctx.properties);
   app.use('/api/v2/authorization', ctx.authorization.endpoints);
   app.use('/api/v2/ddata', ddata);
-  app.use('/api/v2/notifications', notificationsV2);
 
-  app.use('/api/v3', api3);
+  /*Start Refactoring code*/
+  app.use('/api/v3/',[bodyParser.urlencoded({ extended: false }),bodyParser.json()],apirouter);
+  /*End Refactoring code*/
 
   // pebble data
   app.get('/pebble', ctx.pebble);

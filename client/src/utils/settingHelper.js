@@ -1,0 +1,30 @@
+export const defaultSettings = {
+    units: 'mg/dL',
+    timeFormat: 12,
+    language:'en',
+    scale:'log',
+    render:'default',
+    alarms:{'uha':{scale:'',value:'240', checked:true},'ha':{scale:'',value:'180', checked:true},'la':{scale:'',value:'80', checked:true},'ula':{scale:'',value:'65', checked:true},'sdw':{scale:'mins',value:'15', checked:true},'sdu':{scale:'',value:'30', checked:true}, 'pbla':{scale:'',value:'', checked:false}},
+    nightMode: false,
+    editMode: true,
+    showRawbg: 'never',
+    customTitle: 'Nightscout',
+    theme: 'default',
+    alarmUrgentHigh: true,
+    history: 48,
+    plugins: {
+      insulin: false,
+      carbs: false,
+      'care-port': false,
+      pump: false,
+      openaps: false,
+      cannula: false,
+      'sensor-age': false,
+      'insulin-age': false,
+      'basal-profile': false,
+      'pump-battery-change': false,
+      'bolus-wizard': false,
+      speech: false
+    },
+    openaps: false
+  };
