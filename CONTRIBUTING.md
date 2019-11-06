@@ -47,8 +47,8 @@ Nightscout is a Node.js application. The basic installation of the software for 
 
 1. Clone the software to your local machine using git
 2. Install Node from https://nodejs.org/en/download/
-2. Use `npm` to install Nightscout dependencies by invokin `npm install` in the project directory. Note the
-   dependency installation has to be done usign a non-root user - _do not use root_ for development and hosting
+2. Use `npm` to install Nightscout dependencies by invoking `npm install` in the project directory. Note the
+   dependency installation has to be done using a non-root user - _do not use root_ for development and hosting
    the software!
 3. Get a Mongo database by either installing Mongo locally, or get a free cloud account from mLab or Mongodb Atlas.
 4. Configure nightscout by copying `my.env.template` to `my.env` and run it - see the next chapter in the instructions
@@ -118,7 +118,7 @@ Now that the commits are available on github, you can click on the compare butto
 We assume all new Pull Requests are at least smoke tested by the author and all code in the PR actually works.
 Please include a description of what the features do and rationalize why the changes are needed.
 
-If you add any new NPM module dependencies, you have to rationalize why there are needed - we prefer pull requests that reduce dependencies, not add them.
+If you add any new NPM module dependencies, you have to rationalize why they are needed - we prefer pull requests that reduce dependencies, not add them.
 Before releasing a a new version, we check with `npm audit` if our dependencies don't have known security issues. 
 
 When adding new features that add configuration options, please ensure the `README` document is amended with information on the new configuration.
@@ -254,7 +254,7 @@ Languages with less than 90% coverage will be removed in a future Nightscout ver
 | Dansk (`dk`)  | [@janrpn] |OK |
 | Ελληνικά `(el`)|Please volunteer|Needs attention: 68.5%|
 | English (`en`)|Please volunteer|OK|
-| Español (`es`) |Please volunteer|OK|
+| Español (`es`) |[@alphacentauri82] |OK|
 | Suomi (`fi`)|[@sulkaharo] |OK|
 | Français (`fr`)|Please volunteer|OK|
 | עברית (`he`)|Please volunteer|OK|
