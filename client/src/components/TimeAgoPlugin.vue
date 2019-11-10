@@ -1,8 +1,8 @@
 <template>
   <v-chip :color="stateColor" text-color="white">
-    <v-avatar left :color="stateColor" v-if="!inRetroMode">{{
-      timeDisplay
-    }}</v-avatar>
+    <v-avatar left :color="stateColor" v-if="!inRetroMode">
+      {{ timeDisplay }}
+    </v-avatar>
     <template v-if="!inRetroMode">{{ label }}</template>
     <template v-else
       >RETRO</template
@@ -13,6 +13,7 @@
 <script>
 import { mapState } from 'vuex'
 const moment = require('moment')
+import DateTimeHelper from '@/utils/datetime.helper.js'
 
 export default {
   name: 'TimeAgoPlugin',
@@ -25,33 +26,6 @@ export default {
       timeDisplay: 0,
       status: 'current'
     }
-  },
-  created() {
-    const oneMinute = moment.duration(1, 'minutes').asMilliseconds()
-    const twoMinutes = moment.duration(2, 'minutes').asMilliseconds()
-    const oneHour = moment.duration(1, 'hour').asMilliseconds()
-    const twoHours = moment.duration(2, 'hours').asMilliseconds()
-    const oneDay = moment.duration(1, 'day').asMilliseconds()
-    const twoDays = moment.duration(2, 'days').asMilliseconds()
-    const oneWeek = moment.duration(1, 'week').asMilliseconds()
-
-    this.resolvers = [
-      this.isMissing,
-      this.inTheFuture,
-      this.almostInTheFuture,
-      this.isLessThan(twoMinutes, oneMinute, 'min ago', 'm'),
-      this.isLessThan(oneHour, oneMinute, 'mins ago', 'm'),
-      this.isLessThan(twoHours, oneHour, 'hour ago', 'h'),
-      this.isLessThan(oneDay, oneHour, 'hours ago', 'h'),
-      this.isLessThan(twoDays, oneDay, 'day ago', 'd'),
-      this.isLessThan(oneWeek, oneDay, 'days ago', 'd'),
-      function() {
-        return {
-          label: 'long ago',
-          shortLabel: 'ago'
-        }
-      }
-    ]
   },
   computed: {
     stateColor() {
@@ -77,7 +51,7 @@ export default {
   },
   methods: {
     updateVisualisation() {
-      let agoDisplay = this.calcDisplay(
+      let agoDisplay = DateTimeHelper.calcDisplay(
         this.$store.getters['data/lastSGVEntry'],
         this.$store.state.initTime
       )
@@ -86,23 +60,6 @@ export default {
       this.timeDisplay = agoDisplay.value
 
       this.checkStatus()
-    },
-    calcDisplay(entry, time) {
-      const opts = {
-        time: time,
-        entry: entry
-      }
-
-      if (time && entry && entry.mills) {
-        opts.timeSince = time - entry.mills
-      }
-
-      for (let i = 0; i < this.resolvers.length; i++) {
-        let value = this.resolvers[i](opts)
-        if (value) {
-          return value
-        }
-      }
     },
     checkStatus() {
       // check if the app has been suspended, if yes, snooze data missing alarm for 15 seconds
@@ -145,53 +102,6 @@ export default {
         this.status = 'urgent'
       } else if (warn && isStale(warnMins)) {
         this.status = 'warn'
-      }
-    },
-    isMissing(opts) {
-      if (
-        !opts ||
-        !opts.entry ||
-        isNaN(opts.entry.mills) ||
-        isNaN(opts.time) ||
-        isNaN(opts.timeSince)
-      ) {
-        // TODO: add translate features
-        return {
-          label: 'time ago',
-          shortLabel: 'ago'
-        }
-      }
-    },
-    inTheFuture(opts) {
-      if (
-        opts.entry.mills - moment.duration(5, 'minutes').milliseconds() >
-        opts.time
-      ) {
-        // TODO: add translations
-        return {
-          label: 'in the future',
-          shortLabel: 'future'
-        }
-      }
-    },
-    almostInTheFuture(opts) {
-      if (opts.entry.mills > opts.time) {
-        return {
-          value: 1,
-          label: 'min ago',
-          shortLabel: 'm'
-        }
-      }
-    },
-    isLessThan(limit, divisor, label, shortLabel) {
-      return function checkIsLessThan(opts) {
-        if (opts.timeSince < limit) {
-          return {
-            value: Math.max(1, Math.round(opts.timeSince / divisor)),
-            label: label,
-            shortLabel: shortLabel
-          }
-        }
       }
     }
   },

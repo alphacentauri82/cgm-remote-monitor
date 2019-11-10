@@ -15,6 +15,7 @@
     "shiro-trie": "^0.4.9",
     "socket.io-client": "^2.3.0",
     "vue": "^2.6.10",
+    "vue-i18n": "^8.15.0",
     "vue-router": "^3.0.3",
     "vue-socket.io": "^3.0.7",
     "vuetify": "^2.1.0",

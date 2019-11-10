@@ -5,10 +5,10 @@
         <div class="time-wrapper d-flex align-center justify-center">
           <p class="currentTime text--primary">{{ currentTimeFormatted }}</p>
         </div>
-        <div class="statusPills"></div>
         <v-chip-group multiple column>
           <TimeAgoPlugin v-if="this.isFeatureEnabled('timeago')" />
           <UBatPlugin v-if="this.isFeatureEnabled('upbat')" />
+          <PumpPlugin v-if="this.isFeatureEnabled('pump')" />
         </v-chip-group>
       </div>
     </v-card-text>
@@ -20,12 +20,14 @@ import { mapState } from 'vuex'
 import dateTimeHelper from '@/utils/datetime.helper.js'
 import TimeAgoPlugin from '@/components/TimeAgoPlugin.vue'
 import UBatPlugin from '@/components/UBatPlugin.vue'
+import PumpPlugin from '@/components/PumpPlugin.vue'
 
 export default {
   name: 'ClockCurrent',
   components: {
     TimeAgoPlugin,
-    UBatPlugin
+    UBatPlugin,
+    PumpPlugin
   },
   data: () => {
     return {

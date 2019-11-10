@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Dashboard from '@/views/Dashboard.vue'
+import DashboardSettings from '@/components/DashboardSettings.vue'
 
 Vue.use(Router)
 
@@ -12,6 +13,11 @@ export default new Router({
       path: '/',
       name: 'home',
       component: Dashboard
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: DashboardSettings
     },
     {
       path: '/about',

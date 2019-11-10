@@ -1,14 +1,6 @@
 <template>
   <v-app>
-    <BaseNavbar @showSidebar="enablesidebar = !enablesidebar" />
-    <BaseSidebar
-      v-bind:drawer="enablesidebar"
-      @displaySettings="enablesettings = !enablesettings"
-    />
-    <BaseDashboardSettings
-      v-bind:opened="enablesettings"
-      @updset="enablesettings = !enablesettings"
-    />
+    <BaseNavbar />
 
     <NotificationContainer />
     <v-content>
@@ -37,10 +29,6 @@ export default {
   components: {
     NotificationContainer
   },
-  data: () => ({
-    enablesidebar: false,
-    enablesettings: false
-  }),
   sockets: {
     connect: function() {
       console.log('Client connected to server.')

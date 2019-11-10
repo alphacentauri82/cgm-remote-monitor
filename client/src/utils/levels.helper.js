@@ -1,37 +1,41 @@
 // TODO: Adding translation
 
+const levels = {
+  URGENT: 2,
+  WARN: 1,
+  INFO: 0,
+  LOW: -1,
+  LOWEST: -2,
+  NONE: -3
+}
+
+const level2Display = {
+  '2': 'Urgent',
+  '1': 'Warning',
+  '0': 'Info',
+  '-1': 'Low',
+  '-2': 'Lowest',
+  '-3': 'None'
+}
+
 export default {
-  levels: {
-    URGENT: 2,
-    WARN: 1,
-    INFO: 0,
-    LOW: -1,
-    LOWEST: -2,
-    NONE: -3
-  },
-  level2Display: {
-    '2': 'Urgent',
-    '1': 'Warning',
-    '0': 'Info',
-    '-1': 'Low',
-    '-2': 'Lowest',
-    '-3': 'None'
-  },
+  levels,
+  level2Display,
   isAlarm: level => {
-    return level === this.levels.WARN || level === this.levels.URGENT
+    return level === levels.WARN || level === levels.URGENT
   },
   toDisplay: level => {
     const key = level !== undefined && level.toString()
-    return (key && this.level2Display[key]) || 'Unknown'
+    return (key && level2Display[key]) || 'Unknown'
   },
   toLowerCase: level => {
     return this.toDisplay(level).toLowerCase()
   },
   toStatusClass: level => {
     let cls = 'current'
-    if (level === this.levels.WARN) {
+    if (level === levels.WARN) {
       cls = 'warn'
-    } else if (level === this.levels.URGENT) {
+    } else if (level === levels.URGENT) {
       cls = 'urgent'
     }
 

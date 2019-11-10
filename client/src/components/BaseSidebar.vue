@@ -1,46 +1,39 @@
 <template>
-  <v-navigation-drawer v-if="drawer" app absolute permanent right dark>
-    <v-list>
-      <v-list-item>
-        <v-list-item-content>
-          <v-list-item-title>Options</v-list-item-title>
-        </v-list-item-content>
-      </v-list-item>
-    </v-list>
-    <v-divider></v-divider>
+  <v-navigation-drawer
+    v-model="drawer.open"
+    :clipped="drawer.clipped"
+    :right="drawer.right"
+    app
+  >
     <v-list dense nav>
-      <v-list-item v-for="item in items" :key="item.title" link>
+      <v-list-item v-for="item in items" :key="item.title" link :to="item.to">
         <v-list-item-content>
-          <v-list-item-title>{{ item.title }}</v-list-item-title>
+          <v-list-item-title>{{ $t(item.title) }}</v-list-item-title>
         </v-list-item-content>
-      </v-list-item>
-      <v-list-item>
-        <v-btn color="primary" dark v-on:click.stop="$emit('displaySettings')"
-          >DashBoard Settings</v-btn
-        >
       </v-list-item>
     </v-list>
   </v-navigation-drawer>
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
-  props: {
-    drawer: { required: true }
-  },
-  watch: {
-    group() {
-      this.drawer = false
-    }
-  },
+  name: 'BaseSidebar',
   data() {
     return {
       items: [
-        { title: 'Reports' },
-        { title: 'Profile Editor' },
-        { title: 'Admin Tools' }
+        { title: 'sidebar.reports', to: '/reports' },
+        { title: 'sidebar.profile_editor', to: '/profile' },
+        { title: 'sidebar.admin_tools', to: '/admin-tools' },
+        { title: 'sidebar.settings', to: '/settings' }
       ]
     }
+  },
+  computed: {
+    ...mapState({
+      drawer: state => state.drawer
+    })
   }
 }
 </script>

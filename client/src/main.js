@@ -8,6 +8,7 @@ import camelCase from 'lodash/camelCase'
 import vuetify from '@/plugins/vuetify'
 import SocketService from '@/plugins/SocketService'
 import { apiClient } from '@/utils/http-common'
+import { i18n } from '@/plugins/i18n'
 
 /**
  * Automatic global register of components
@@ -44,5 +45,6 @@ new Vue({
   store,
   vuetify,
   SocketService,
+  i18n,
   render: h => h(App)
 }).$mount('#app')
