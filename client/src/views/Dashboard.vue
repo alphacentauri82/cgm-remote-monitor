@@ -8,7 +8,7 @@
       <v-flex md6 lg6 xs12>
         <v-card>
           <v-card-text>
-            <h2>Glucose</h2>
+            <BgStatus />
           </v-card-text>
         </v-card>
       </v-flex>
@@ -26,11 +26,13 @@
 
 <script>
 import ClockCurrent from '@/components/ClockCurrent.vue'
+import BgStatus from '@/components/BgStatus.vue'
 
 export default {
   name: 'Dashboard',
   components: {
-    ClockCurrent
+    ClockCurrent,
+    BgStatus
   }
 }
 </script>

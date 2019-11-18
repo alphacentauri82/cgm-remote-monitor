@@ -1,18 +1,24 @@
 import store from '@/store/store'
 import _partition from 'lodash/partition'
-import cloneDeep from 'lodash/cloneDeep'
-import chain from 'lodash/chain'
-import includes from 'lodash/includes'
-import isEqual from 'lodash/isEqual'
-import has from 'lodash/has'
-import isObject from 'lodash/isObject'
-import uniqBy from 'lodash/uniqBy'
-import filter from 'lodash/filter'
-import findLast from 'lodash/findLast'
+import {
+  cloneDeep,
+  chain,
+  includes,
+  isEqual,
+  has,
+  isObject,
+  uniqBy,
+  filter,
+  findLast,
+  first
+} from 'lodash'
 const moment = require('moment')
 
 const DEVICE_TYPE_FIELDS = ['uploader', 'pump', 'openaps', 'loop', 'xdripjs']
 const TWO_DAYS = 172800000
+
+let lastChecked = new Date()
+let lastSuspendTime = new Date('1900-01-01')
 
 export default {
   /**
@@ -528,5 +534,182 @@ export default {
     return findLast(entries, entry => {
       return this.entryMills(entry) <= store.state.initTime
     })
+  },
+  /**
+   *
+   * @param {*} entry
+   */
+  isCurrent(entry) {
+    return (
+      entry &&
+      store.state.initTime - entry.mills <=
+        moment.duration(15, 'minutes').asMilliseconds()
+    )
+  },
+  /**
+   *
+   * @param {*} insulin
+   */
+  roundInsulinForDisplayFormat(insulin) {
+    if (insulin === 0) {
+      return '0'
+    }
+
+    let dataStore = store.state.data
+    if (dataStore.roundingStyle == 'medtronic') {
+      let denominator = 0.1
+      let digits = 1
+      if (insulin <= 0.5) {
+        denominator = 0.05
+        digits = 2
+      }
+
+      return (Math.floor(insulin / denominator) * denominator).toFixed(digits)
+    }
+
+    return (Math.floor(insulin / 0.01) * 0.01).toFixed(2)
+  },
+  /**
+   *
+   * @param {*} bg
+   */
+  roundBGToDisplayFormat(bg) {
+    const settings = store.state.serverSettings.settings
+    return settings.units === 'mmol' ? Math.round(bg * 10) / 10 : Math.round(bg)
+  },
+  /**
+   *
+   * @param {*} mgdl
+   */
+  scaleMgdl(mgdl) {
+    const settings = store.state.serverSettings.settings
+    if (settings.units === 'mmol' && mgdl) {
+      return Number(this.mgdlToMMOL(mgdl))
+    } else {
+      return Number(mgdl)
+    }
+  },
+  /**
+   *
+   */
+  unitsLabel() {
+    const settings = store.state.serverSettings.settings
+    return settings && settings.units === 'mmol' ? 'mmol/L' : 'mg/dl'
+  },
+  /**
+   *
+   * @param {*} mgdl
+   */
+  mgdlToMMOL(mgdl) {
+    return (Math.round((mgdl / 18) * 10) / 10).toFixed(1)
+  },
+  /**
+   *
+   * @param {*} mgdl
+   */
+  mmolToMgdl(mgdl) {
+    return Math.round(mgdl * 18)
+  },
+  /**
+   *
+   */
+  findOfflineMarker() {
+    let dataStore = store.state.data
+
+    return findLast(dataStore.treatments, treatment => {
+      let eventTime = this.entryMills(treatment)
+      let eventEnd = treatment.duration
+        ? eventTime +
+          moment.duration(treatment.duration, 'minutes').asMilliseconds()
+        : eventTime
+      const initTime = store.state.initTime
+
+      return (
+        eventTime <= initTime &&
+        treatment.eventType === 'OpenAPS Offline' &&
+        eventEnd >= initTime
+      )
+    })
+  },
+  /**
+   *
+   */
+  checkCurrentStatus() {
+    // check if the app has been suspended, if yes, snooze data missing alarm for 15 seconds
+    let now = new Date()
+    let delta = now.getTime() - lastChecked.getTime()
+    lastChecked = now
+
+    if (delta > 15 * 1000) {
+      // looks like we've been hibernating
+      lastSuspendTime = now
+    }
+
+    let timeSinceLastSuspended = now.getTime() - lastSuspendTime.getTime()
+
+    if (timeSinceLastSuspended < 10 * 1000) {
+      console.log('Hibernation detected, suspending timeago alarm')
+      return 'current'
+    }
+
+    let lastSGVEntry = store.getters['data/lastSGVEntry']
+    let warn = store.state.serverSettings.settings.alarmTimeagoWarn
+    let warnMins =
+      store.state.serverSettings.settings.alarmTimeagoWarnMins || 15
+    let urgent = store.state.serverSettings.settings.alarmTimeagoUrgent
+    let urgentMins =
+      store.state.serverSettings.settings.alarmTimeagoUrgentMins || 30
+
+    const isStale = mins => {
+      return (
+        store.state.initTime - lastSGVEntry.mills >
+        moment.duration(mins, 'minutes').asMilliseconds()
+      )
+    }
+
+    if (!lastSGVEntry) {
+      return 'current'
+    } else if (urgent && isStale(urgentMins)) {
+      return 'urgent'
+    } else if (warn && isStale(warnMins)) {
+      return 'warn'
+    }
+  },
+  /**
+   *
+   * @param {*} device
+   */
+  getDeviceName(device) {
+    let last = device ? last(device.split('://')) : 'unknown'
+    return first(last.split('/'))
+  },
+  /**
+   *
+   * @param {*} entry
+   */
+  scaleEntry(entry) {
+    const settings = store.state.serverSettings.settings
+
+    if (entry && entry.scaled === undefined) {
+      if (settings.units === 'mmol') {
+        entry.scaled = entry.mmol || this.mgdlToMMOL(entry.mgdl)
+      } else {
+        entry.scaled = entry.mgdl || this.mmolToMgdl(entry.mmol)
+      }
+    }
+
+    return entry && Number(entry.scaled)
+  },
+  /**
+   *
+   * @param {*} value
+   */
+  toFixed(value) {
+    if (!value) {
+      return '0'
+    } else {
+      var fixed = value.toFixed(2)
+      return fixed === '-0.00' ? '0.00' : fixed
+    }
   }
 }

@@ -100,6 +100,8 @@ export const actions = {
     // updating the device status
     if (data.devicestatus) {
       if (
+        settings &&
+        settings.extendedSettings &&
         settings.extendedSettings.devicestatus &&
         settings.extendedSettings.devicestatus.advanced
       ) {
@@ -143,5 +145,12 @@ export const actions = {
 export const getters = {
   lastSGVEntry: state => {
     return DataService.lastEntry(state.sgvs)
+  },
+  lastSGVMgdl: (state, getters) => {
+    const last = getters.lastSGVEntry
+    return last && last.mgdl
+  },
+  lastSGVMills: (state, getters) => {
+    return DataService.entryMills(getters.lastSGVEntry)
   }
 }

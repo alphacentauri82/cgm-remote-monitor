@@ -2,14 +2,14 @@
   <v-tooltip top open-on-click>
     <template v-slot:activator="{ on }">
       <v-chip :color="stateColor" text-color="white" v-on="on">
-        <v-avatar class="grey darken-3" left :color="stateColor">
-          {{ label }}
-        </v-avatar>
+        <v-avatar class="grey darken-3" left :color="stateColor">{{
+          label
+        }}</v-avatar>
         {{ value }}
       </v-chip>
     </template>
 
-    <span>
+    <span v-if="info.length > 0">
       <div class="tooltip-info" v-for="(inf, index) in info" :key="index">
         <strong>{{ inf.label }}</strong>
         {{ inf.value }}
@@ -188,8 +188,8 @@ export default {
 
       // TODO: A new Pump Offline marker? something generic? Use something new instead of a treatment?
       // eslint-disable-next-line no-constant-condition
-      if (false) {
-        // TODO: import openamps
+      if (DataService.findOfflineMarker()) {
+        console.info('OpenAPS known offline, not checking for alerts')
       } else {
         forEach(ALL_STATUS_FIELDS, fieldName => {
           let field = result[fieldName]

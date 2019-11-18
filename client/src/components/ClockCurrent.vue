@@ -9,6 +9,7 @@
           <TimeAgoPlugin v-if="this.isFeatureEnabled('timeago')" />
           <UBatPlugin v-if="this.isFeatureEnabled('upbat')" />
           <PumpPlugin v-if="this.isFeatureEnabled('pump')" />
+          <OpenApsPlugin v-if="this.isFeatureEnabled('pump')" />
         </v-chip-group>
       </div>
     </v-card-text>
@@ -21,13 +22,15 @@ import dateTimeHelper from '@/utils/datetime.helper.js'
 import TimeAgoPlugin from '@/components/TimeAgoPlugin.vue'
 import UBatPlugin from '@/components/UBatPlugin.vue'
 import PumpPlugin from '@/components/PumpPlugin.vue'
+import OpenApsPlugin from '@/components/OpenApsPlugin.vue'
 
 export default {
   name: 'ClockCurrent',
   components: {
     TimeAgoPlugin,
     UBatPlugin,
-    PumpPlugin
+    PumpPlugin,
+    OpenApsPlugin
   },
   data: () => {
     return {

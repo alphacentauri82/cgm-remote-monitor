@@ -461,8 +461,11 @@ export default {
       let toStore = { ...this.dashboardSettings, ...this.changedValues }
 
       //Load selected language
-      this.$i18n.setLocaleMessage('lang',require('@/lang/'+toStore.language+'.json'));
-      this.$i18n.locale = 'lang';
+      this.$i18n.setLocaleMessage(
+        'lang',
+        require('@/lang/' + toStore.language + '.json')
+      )
+      this.$i18n.locale = 'lang'
 
       // sending to save
       this.$store.dispatch('settings/updateSettings', toStore).then(() => {

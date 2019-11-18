@@ -162,5 +162,87 @@ export default {
     }
 
     return when
+  },
+  /**
+   *
+   * @param {*} status
+   */
+  openapsToMoments(status) {
+    const openaps = status.openaps
+    return {
+      when: moment(status.mills),
+      enacted:
+        openaps.enacted &&
+        openaps.enacted.timestamp &&
+        (openaps.enacted.received || openaps.enacted.received) &&
+        moment(openaps.enacted.timestamp),
+      notEnacted:
+        openaps.enacted &&
+        openaps.enacted.timestamp &&
+        !(openaps.enacted.received || openaps.enacted.received) &&
+        moment(openaps.enacted.timestamp),
+      suggested:
+        openaps.suggested &&
+        openaps.suggested.timestamp &&
+        moment(openaps.suggested.timestamp),
+      iob: openaps.iob && openaps.iob.timestamp && moment(openaps.iob.timestamp)
+    }
+  },
+  /**
+   *
+   * @param {*} moments
+   * @param {*} noWarning
+   * @param {*} recent
+   */
+  momentsToLoopStatus(moments, noWarning, recent) {
+    let status = {
+      symbol: '⚠',
+      code: 'warning',
+      label: 'Warning'
+    }
+
+    if (!moments.notEnacted || !moments.enacted || !moments.suggested) {
+      return status
+    }
+
+    if (
+      (moments.notEnacted &&
+        (moments.enacted && moments.notEnacted.isAfter(moments.enacted))) ||
+      (!moments.enacted && moments.notEnacted.isAfter(recent))
+    ) {
+      Object.assign(status, {
+        symbol: 'x',
+        code: 'notenacted',
+        label: 'Not Enacted'
+      })
+    } else if (moments.enacted && moments.enacted.isAfter(recent)) {
+      Object.assign(status, {
+        symbol: '⌁',
+        code: 'enacted',
+        label: 'Enacted'
+      })
+    } else if (moments.suggested && moments.suggested.isAfter(recent)) {
+      Object.assign(status, {
+        symbol: '↻',
+        code: 'looping',
+        label: 'Looping'
+      })
+    } else if (moments.when && (noWarning || moments.when.isAfter(recent))) {
+      Object.assign(status, {
+        symbol: '◉',
+        code: 'waiting',
+        label: 'Waiting'
+      })
+    }
+
+    return status
+  },
+  /**
+   *
+   * @param {*} prefix
+   * @param {*} inRetroMode
+   */
+  timeAt(prefix, inRetroMode) {
+    return inRetroMode ? (prefix ? ' ' : '') + '@ ' : prefix ? ', ' : ''
   }
 }
