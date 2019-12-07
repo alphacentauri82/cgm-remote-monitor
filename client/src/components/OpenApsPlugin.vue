@@ -1,11 +1,14 @@
 <template>
   <v-tooltip top open-on-click>
     <template v-slot:activator="{ on }">
-      <v-chip :color="stateColor" text-color="white" v-on="on">
-        <v-avatar class="grey darken-3" left :color="stateColor">{{
-          label
-        }}</v-avatar>
-        {{ value }}
+      <v-chip :color="stateColor" v-on="on">
+        <v-avatar
+          :class="stateColor == 'default' ? 'grey' : stateColor"
+          class="darken-3"
+          left
+          >{{ value }}</v-avatar
+        >
+        {{ label }}
       </v-chip>
     </template>
 
@@ -24,18 +27,19 @@
 
 <script>
 import { mapState } from 'vuex'
-import chain from 'lodash/chain'
-import isArray from 'lodash/isArray'
+import {
+  chain,
+  isArray,
+  forEach,
+  includes,
+  forIn,
+  maxBy,
+  sortBy,
+  compact,
+  map,
+  get
+} from 'lodash'
 import _isEmpty from 'lodash/isEmpty'
-import forEach from 'lodash/forEach'
-import _last from 'lodash/last'
-import first from 'lodash/first'
-import includes from 'lodash/includes'
-import forIn from 'lodash/forIn'
-import maxBy from 'lodash/maxBy'
-import sortBy from 'lodash/sortBy'
-import compact from 'lodash/compact'
-import map from 'lodash/map'
 import DataService from '@/services/DataService.js'
 import LevelsHelper from '@/utils/levels.helper.js'
 import DateTimeHelper from '@/utils/datetime.helper.js'
@@ -74,7 +78,7 @@ export default {
           color = 'red'
           break
         default:
-          color = 'current'
+          color = 'default'
           break
       }
 
@@ -180,6 +184,7 @@ export default {
         }
       })
 
+      // generating the label
       let label = 'OpenAPS'
       if (includes(selectedFields, 'status-symbol')) {
         label += ' ' + prop.status.symbol
@@ -190,10 +195,16 @@ export default {
         inRetroMode,
         initTime
       )
+      // updating label, info and status
       this.label = label
       this.info = info
-
       this.updateStatus(prop, prefs)
+
+      // creating the Forecast Points and storing them in the application Store
+      this.$store.dispatch(
+        'data/updateOpenAPSForecastPoints',
+        this.getForecastPoints(prop, prefs)
+      )
     },
     analyzeData() {
       const initTime = this.$store.state.initTime
@@ -201,9 +212,9 @@ export default {
       let recentMills =
         initTime - moment.duration(recentHours, 'hours').asMilliseconds()
 
-      let recentData
+      let recentData = []
       if (this.dataSource.devicestatus.length > 0) {
-        chain(this.dataSource.devicestatus)
+        recentData = chain(this.dataSource.devicestatus)
           .filter(status => {
             return (
               'openaps' in status &&
@@ -225,8 +236,6 @@ export default {
             return status
           })
           .value()
-      } else {
-        recentData = []
       }
 
       let prefs = this.getPrefs()
@@ -287,15 +296,15 @@ export default {
           result.lastNotEnacted = enacted
         }
 
-        let suggested = status.openaps && status.openaps.suggested
+        let suggested = get(status, 'openaps.suggested')
         if (
           suggested &&
           moments.suggested &&
-          (!result.lastSugested ||
-            moments.suggested.isAfter(result.lastSugested.moment))
+          (!result.lastSuggested ||
+            moments.suggested.isAfter(result.lastSuggested.moment))
         ) {
-          suggested = moment(suggested.timestamp)
-          result.lastSugested = suggested
+          suggested.moment = moment(suggested.timestamp)
+          result.lastSuggested = suggested
 
           if (
             suggested.predBGs &&
@@ -327,8 +336,8 @@ export default {
         }
       })
 
-      if (result.lastEnacted && result.lastSugested) {
-        if (result.lastEnacted.moment.isAfter(result.lastSugested.moment)) {
+      if (result.lastEnacted && result.lastSuggested) {
+        if (result.lastEnacted.moment.isAfter(result.lastSuggested.moment)) {
           result.lastLoopMoment = result.lastEnacted.moment
           result.lastEventualBG = result.lastEnacted.eventualBG
         } else {
@@ -345,9 +354,9 @@ export default {
 
       result.status = DateTimeHelper.momentsToLoopStatus(
         {
-          enacted: result.lastEnacted && result.lastEnacted.moment,
-          notEnacted: result.lastNotEnacted && result.lastNotEnacted.moment,
-          suggested: result.lastSugested && result.lastSugested.moment
+          enacted: get(result, 'lastEnacted.moment'),
+          notEnacted: get(result, 'lastNotEnacted.moment'),
+          suggested: get(result, 'lastSuggested.moment')
         },
         false,
         recent
@@ -409,17 +418,13 @@ export default {
           extendedSettings && extendedSettings.colorPredictionLines
       }
     },
-    getDeviceName(device) {
-      let last = device ? _last(device.split('://')) : 'unknown'
-      return first(last.split('/'))
-    },
     getDevice(status, result) {
       let uri = status.device || 'device'
       let device = result.seenDevices[uri]
 
       if (!device) {
         device = {
-          name: this.getDeviceName(uri),
+          name: DataService.getDeviceName(uri),
           uri
         }
 
@@ -433,7 +438,7 @@ export default {
     },
     addSuggestion(prop, selectedFields) {
       if (prop.lastSuggested) {
-        let bg = prop.lastSuggested
+        let bg = prop.lastSuggested.bg
         if (this.dataSource.profile.data[0].units === 'mmol') {
           bg = Math.round((bg / 18) * 10) / 10
         }
@@ -448,7 +453,7 @@ export default {
         ]
 
         if (includes(selectedFields, 'iob')) {
-          valueParts = this.concatIOB(valueParts)
+          valueParts = this.concatIOB(prop, valueParts)
         }
 
         return {
@@ -461,7 +466,7 @@ export default {
       if (prop.lastIOB) {
         valueParts = valueParts.concat([
           ', IOB: ',
-          DataService.roundInsulinForDisplayFormat(prop.lastIOB.iob) + 'u',
+          DataService.roundInsulinForDisplayFormat(prop.lastIOB.iob) + 'U',
           prop.lastIOB.basaliob
             ? 'Basal IOB ' +
               DataService.roundInsulinForDisplayFormat(prop.lastIOB.basaliob) +
@@ -497,6 +502,69 @@ export default {
       }
 
       this.status = LevelsHelper.toStatusClass(level)
+    },
+    getForecastPoints(prop, prefs) {
+      let points = []
+
+      const toPoints = (offset, forecastType) => {
+        return (value, index) => {
+          let colors = {
+            Values: '#ff00ff',
+            IOB: prefs.predIOBColor,
+            'Zero-Temp': prefs.predZTColor,
+            COB: prefs.predCOBColor,
+            'Accel-COB': prefs.predACOBColor,
+            UAM: prefs.predUAMColor
+          }
+
+          return {
+            mgdl: value,
+            color: prefs.colorPredictionLines
+              ? colors[forecastType]
+              : '#ff00ff',
+            mills:
+              prop.lastPredBGs.moment.valueOf() +
+              moment.duration(5 * index, 'minutes').asMilliseconds() +
+              offset,
+            noFade: true,
+            forecastType
+          }
+        }
+      }
+
+      if (prop.lastPredBGs) {
+        if (prop.lastPredBGs.values) {
+          points = points.concat(
+            map(get(prop, 'lastPredBGs.values', toPoints(0, 'Values')))
+          )
+        }
+        if (get(prop, 'lastPredBGs.IOB')) {
+          points = points.concat(
+            map(get(prop, 'lastPredBGs.IOB'), toPoints(3333, 'IOB'))
+          )
+        }
+        if (get(prop, 'lastPredBGs.ZT')) {
+          points = points.concat(
+            map(get(prop, 'lastPredBGs.ZT'), toPoints(4444, 'Zero-Temp'))
+          )
+        }
+        if (get(prop, 'lastPredBGs.aCOB')) {
+          points = points.concat(
+            map(get(prop, 'lastPredBGs.aCOB'), toPoints(5555, 'Accel-COB'))
+          )
+        }
+        if (get(prop, 'lastPredBGs.COB')) {
+          points = points.concat(
+            map(get(prop, 'lastPredBGs.COB'), toPoints(7777, 'COB'))
+          )
+        }
+        if (get(prop, 'lastPredBGs.UAM')) {
+          points = points.concat(
+            map(get(prop, 'lastPredBGs.UAM'), toPoints(9999, 'UAM'))
+          )
+        }
+      }
+      return points
     }
   },
   watch: {
@@ -509,10 +577,11 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .v-chip .v-avatar {
-  height: 26px !important;
-  width: auto !important;
   border-radius: 25%;
+  height: 26px !important;
+  padding: 0 10px;
+  width: auto !important;
 }
 </style>

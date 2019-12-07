@@ -1,12 +1,10 @@
 <template>
   <v-chip :color="stateColor" text-color="white">
-    <v-avatar left :color="stateColor" v-if="!inRetroMode">{{
-      timeDisplay
-    }}</v-avatar>
+    <v-avatar left :color="stateColor" v-if="!inRetroMode">{{ timeDisplay }}</v-avatar>
     <template v-if="!inRetroMode">{{ label }}</template>
-    <template v-else
-      >RETRO</template
-    >
+    <template v-else>
+      <span>RETRO</span>
+    </template>
   </v-chip>
 </template>
 
@@ -36,7 +34,7 @@ export default {
           color = 'yellow'
           break
         default:
-          color = 'primary'
+          color = 'default'
           break
       }
 

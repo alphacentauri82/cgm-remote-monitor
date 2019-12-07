@@ -1,8 +1,8 @@
 <template>
   <v-tooltip top open-on-click v-if="!hide">
     <template v-slot:activator="{ on }">
-      <span class="pa-2" v-if="!hide" v-on="on">
-        <v-icon large :color="color">{{ directionIcon }}</v-icon>
+      <span v-if="!hide" v-on="on">
+        <v-icon large :class="color">{{ directionIcon }}</v-icon>
       </span>
     </template>
 
@@ -88,4 +88,8 @@ export default {
 }
 </script>
 
-<style></style>
+<style scoped>
+.v-icon.v-icon {
+  font-size: 90px !important;
+}
+</style>

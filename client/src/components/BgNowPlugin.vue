@@ -33,6 +33,7 @@ import {
   omit,
   keys,
   forIn,
+  get,
   takeRightWhile
 } from 'lodash'
 import moment from 'moment'
@@ -73,9 +74,9 @@ export default {
       this.delta = this.calcDelta()
 
       let info = []
-      let display = this.delta && this.delta.display
+      let display = get(this.delta, 'display')
 
-      if (this.delta && this.delta.interpolated) {
+      if (get(this.delta, 'interpolated')) {
         display += ' *'
         // TODO: add translation
         info.push({
@@ -107,13 +108,13 @@ export default {
               this.dataSource.inRetroMode,
               this.initTime
             ),
-            value: DataService.scaleEnry(entry),
+            value: DataService.scaleEntry(entry),
             recent: entry
           }
         })
       }
 
-      if (this.delta && this.delta.previous && this.delta.previous.sgvs) {
+      if (get(this.delta, 'previous.sgvs')) {
         forEach(this.delta.previous.sgvs, entry => {
           let device = DataService.getDeviceName(entry.device)
           let deviceInfo = deviceInfos[device]

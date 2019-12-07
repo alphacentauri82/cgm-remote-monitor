@@ -6,12 +6,15 @@
           class="bg-wrapper d-flex align-center justify-center"
           :class="stateColor"
         >
-          <p class="currentBg text--primary">{{ currentBgDisplay }}</p>
+          <p class="currentBg">{{ currentBgDisplay }}</p>
           <DirectionPlugin :color="stateColor" />
         </div>
         <v-chip-group multiple column>
           <BgNowPlugin />
           <IobPlugin />
+          <BwpPlugin />
+          <CannulaAgePlugin v-if="this.isFeatureEnabled('cage')" />
+          <SensorAgePlugin v-if="this.isFeatureEnabled('sage')" />
         </v-chip-group>
       </div>
     </v-card-text>
@@ -20,19 +23,25 @@
 
 <script>
 import { mapState } from 'vuex'
-import last from 'lodash/last'
+import { last, isNumber } from 'lodash'
 // import DataService from '@/services/DataService.js'
 import errorCodes from '@/utils/errorCodes.helper.js'
 import DirectionPlugin from '@/components/DirectionPlugin.vue'
 import BgNowPlugin from '@/components/BgNowPlugin.vue'
 import IobPlugin from '@/components/IobPlugin.vue'
+import BwpPlugin from '@/components/BwpPlugin.vue'
+import CannulaAgePlugin from '@/components/CannulaAgePlugin.vue'
+import SensorAgePlugin from '@/components/SensorAgePlugin.vue'
 
 export default {
   name: 'BgStatus',
   components: {
     DirectionPlugin,
     BgNowPlugin,
-    IobPlugin
+    IobPlugin,
+    BwpPlugin,
+    CannulaAgePlugin,
+    SensorAgePlugin
   },
   data() {
     return {
@@ -45,7 +54,7 @@ export default {
       return errorCodes.toDisplay(value)
     },
     currentBgDisplay() {
-      if (!(this.currentBg instanceof Number)) {
+      if (!isNumber(this.currentBg)) {
         return '--'
       }
 
@@ -71,7 +80,7 @@ export default {
           color = 'yellow--text'
           break
         default:
-          color = ''
+          color = 'light-green--text  text--accent-3'
           break
       }
 
@@ -84,6 +93,9 @@ export default {
     })
   },
   methods: {
+    isFeatureEnabled(feature) {
+      return this.$store.getters.isFeatureEnabled(feature)
+    },
     updateVisualisation() {
       let currentData = this.dataSource.entries.filter(d => {
         // TODO: add comparison referent to `d.mills <= brushExtent[1].getTime()`
@@ -142,6 +154,6 @@ export default {
   height: 100px;
 }
 .statusBox .currentBg {
-  font-size: 100px;
+  font-size: 90px;
 }
 </style>

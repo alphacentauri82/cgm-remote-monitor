@@ -9,7 +9,7 @@
           <TimeAgoPlugin v-if="this.isFeatureEnabled('timeago')" />
           <UBatPlugin v-if="this.isFeatureEnabled('upbat')" />
           <PumpPlugin v-if="this.isFeatureEnabled('pump')" />
-          <OpenApsPlugin v-if="this.isFeatureEnabled('pump')" />
+          <OpenApsPlugin v-if="this.isFeatureEnabled('openaps')" />
         </v-chip-group>
       </div>
     </v-card-text>

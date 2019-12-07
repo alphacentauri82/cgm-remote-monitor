@@ -10,7 +10,8 @@ import {
   uniqBy,
   filter,
   findLast,
-  first
+  first,
+  last
 } from 'lodash'
 const moment = require('moment')
 
@@ -639,6 +640,7 @@ export default {
     let now = new Date()
     let delta = now.getTime() - lastChecked.getTime()
     lastChecked = now
+    const initTime = store.state.initTime
 
     if (delta > 15 * 1000) {
       // looks like we've been hibernating
@@ -662,8 +664,8 @@ export default {
 
     const isStale = mins => {
       return (
-        store.state.initTime - lastSGVEntry.mills >
-        moment.duration(mins, 'minutes').asMilliseconds()
+        initTime - lastSGVEntry.mills >
+        moment.duration(Number(mins), 'minutes').asMilliseconds()
       )
     }
 
@@ -680,8 +682,8 @@ export default {
    * @param {*} device
    */
   getDeviceName(device) {
-    let last = device ? last(device.split('://')) : 'unknown'
-    return first(last.split('/'))
+    let lastChunk = device ? last(device.split('://')) : 'unknown'
+    return first(lastChunk.split('/'))
   },
   /**
    *

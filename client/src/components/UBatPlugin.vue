@@ -1,8 +1,6 @@
 <template>
   <v-chip :color="stateColor" text-color="white">
-    <v-avatar class="grey darken-3" left :color="stateColor">
-      {{ display }}
-    </v-avatar>
+    <v-avatar class="grey darken-3" left :color="stateColor">{{ display }}</v-avatar>
     <template v-if="level > 90">
       <v-icon>mdi-battery</v-icon>
     </template>
@@ -23,13 +21,8 @@
 
 <script>
 import { mapState } from 'vuex'
-import filter from 'lodash/filter'
-import pick from 'lodash/pick'
-import sortBy from 'lodash/sortBy'
+import { filter, pick, sortBy, chain, forEach, minBy } from 'lodash'
 import _first from 'lodash/first'
-import chain from 'lodash/chain'
-import forEach from 'lodash/forEach'
-import minBy from 'lodash/minBy'
 const moment = require('moment')
 import DataService from '@/services/DataService.js'
 import LevelsHelper from '@/utils/levels.helper.js'
@@ -230,4 +223,9 @@ export default {
 }
 </script>
 
-<style></style>
+<style scoped>
+.v-chip .v-avatar {
+  padding: 0 7px;
+  width: auto !important;
+}
+</style>

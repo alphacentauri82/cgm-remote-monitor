@@ -1,4 +1,5 @@
 import store from '@/store/store'
+import { get } from 'lodash'
 const moment = require('moment')
 
 const UPDATE_TRANS_MS = 750 // milliseconds
@@ -169,6 +170,8 @@ export default {
    */
   openapsToMoments(status) {
     const openaps = status.openaps
+    const iobTimestamp =
+      get(openaps, 'iob.timestamp') || get(openaps, 'iob.time') || null
     return {
       when: moment(status.mills),
       enacted:
@@ -185,7 +188,7 @@ export default {
         openaps.suggested &&
         openaps.suggested.timestamp &&
         moment(openaps.suggested.timestamp),
-      iob: openaps.iob && openaps.iob.timestamp && moment(openaps.iob.timestamp)
+      iob: iobTimestamp && moment(iobTimestamp)
     }
   },
   /**
@@ -201,14 +204,13 @@ export default {
       label: 'Warning'
     }
 
-    if (!moments.notEnacted || !moments.enacted || !moments.suggested) {
-      return status
-    }
-
     if (
-      (moments.notEnacted &&
-        (moments.enacted && moments.notEnacted.isAfter(moments.enacted))) ||
-      (!moments.enacted && moments.notEnacted.isAfter(recent))
+      get(moments, 'notEnacted') &&
+      ((get(moments, 'enacted') &&
+        moments.notEnacted.isAfter(moments.enacted)) ||
+        (!get(moments, 'enacted') &&
+          get(moments, 'notEnacted') &&
+          moments.notEnacted.isAfter(recent)))
     ) {
       Object.assign(status, {
         symbol: 'x',

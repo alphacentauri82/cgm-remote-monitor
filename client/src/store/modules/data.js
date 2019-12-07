@@ -18,6 +18,8 @@ export const state = {
   lastUpdated: 0,
   inRetroMode: false,
   profile: {},
+  iob: {},
+  openApsForecastPoints: [],
   sitechangeTreatments: [],
   insulinchangeTreatments: [],
   batteryTreatments: [],
@@ -67,6 +69,12 @@ export const mutations = {
   },
   UPDATE_ENTRIES(state, entries) {
     state.entries = entries
+  },
+  UPDATE_IOB(state, newIob) {
+    state.iob = { ...state.iob, ...newIob }
+  },
+  UPDATE_OPENAPS_FORECAST_POINTS(state, newForecastPoints) {
+    state.openApsForecastPoints = newForecastPoints
   }
 }
 
@@ -110,7 +118,7 @@ export const actions = {
           'UPDATE_DEVICE_STATUS',
           DataService.mergeDataUpdate(
             data.delta,
-            status.devicestatus,
+            status.devicestatus || [],
             data.devicestatus
           )
         )
@@ -139,6 +147,14 @@ export const actions = {
 
     // updating entries by generate them
     commit('UPDATE_ENTRIES', DataService.prepareEntries())
+  },
+  updateIob({ commit }, newIob) {
+    if (!newIob) return false
+
+    commit('UPDATE_IOB', newIob)
+  },
+  updateOpenAPSForecastPoints({ commit }, newForecastPoints) {
+    commit('UPDATE_OPENAPS_FORECAST_POINTS', newForecastPoints)
   }
 }
 
@@ -152,5 +168,8 @@ export const getters = {
   },
   lastSGVMills: (state, getters) => {
     return DataService.entryMills(getters.lastSGVEntry)
+  },
+  lastScaledSGV: (state, getters) => {
+    return DataService.scaleEntry(getters.lastSGVEntry)
   }
 }

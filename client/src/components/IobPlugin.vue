@@ -7,7 +7,7 @@
       </v-chip>
     </template>
 
-    <span v-if="info > 0">
+    <span v-if="info.length > 0">
       <div class="tooltip-info" v-for="(inf, index) in info" :key="index">
         <strong>{{ inf.label }}</strong>
         {{ inf.value }}
@@ -19,8 +19,9 @@
 <script>
 import { mapState } from 'vuex'
 import { chain, isEmpty, get, isObject, isArray, each, merge } from 'lodash'
-import moment from 'moment'
+const moment = require('moment')
 import DataService from '@/services/DataService.js'
+import ProfileService from '@/services/ProfileService.js'
 
 const RECENCY_THRESHOLD = moment.duration(30, 'minutes').asMilliseconds()
 
@@ -124,6 +125,8 @@ export default {
       }
 
       this.iob = this.addDisplay(result)
+      // udate this data on the store
+      this.$store.dispatch('data/updateIob', this.iob)
     },
     lastIOBDeviceStatus(devicestatus, time) {
       if (time && time.getTime) {
@@ -205,7 +208,7 @@ export default {
 
       each(treatments, treatment => {
         if (treatment.mills <= time) {
-          let tIOB = this.callTreatment(treatment, profile, time, spec_profile)
+          let tIOB = this.calcTreatment(treatment, profile, time, spec_profile)
           if (tIOB.iobContrib > 0) {
             lastBolus = treatment
           }
@@ -237,6 +240,45 @@ export default {
         display,
         displayLine: `IOB: ${display} U`
       })
+    },
+    calcTreatment(treatment, profile, time, spec_profile) {
+      let dia = 3
+      let sens = 0
+
+      if (profile !== undefined) {
+        dia = ProfileService.getDIA(time, spec_profile) || 3
+        sens = ProfileService.getSensitivity(time, spec_profile)
+      }
+
+      const scaleFactor = 3.0 / dia
+      const peak = 75
+      let result = {
+        ioContrib: 0,
+        activityContrib: 0
+      }
+
+      if (treatment.insulin) {
+        let bolusTime = treatment.mills
+        let minAgo = (scaleFactor * (time - bolusTime)) / 1000 / 60
+
+        if (minAgo < peak) {
+          let x1 = minAgo / 5 + 1
+          result.ioContrib =
+            treatment.insulin * (1 - 0.001852 * x1 * x1 + 0.001852 * x1)
+          // units: BG (mg/dL) = (BG/U) * U insulin * scalar
+          result.activityContrib =
+            sens * treatment.insulin * (2 / dia / 60 / peak) * minAgo
+        } else if (minAgo < 180) {
+          let x2 = (minAgo - 75) / 5
+          result.ioContrib =
+            treatment.insulin * (0.001323 * x2 * x2 - 0.054233 * x2 + 0.55556)
+          result.activityContrib =
+            sens *
+            treatment.insulin *
+            (2 / dia / 60 - ((minAgo - peak) * 2) / dia / 60 / (60 * 3 - peak))
+        }
+      }
+      return result
     }
   },
   watch: {
@@ -249,4 +291,11 @@ export default {
 }
 </script>
 
-<style></style>
+<style scoped>
+.v-chip .v-avatar {
+  border-radius: 25%;
+  height: 26px !important;
+  padding: 0 7px;
+  width: auto !important;
+}
+</style>

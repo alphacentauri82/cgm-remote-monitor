@@ -6,11 +6,7 @@
       </v-flex>
 
       <v-flex md6 lg6 xs12>
-        <v-card>
-          <v-card-text>
-            <BgStatus />
-          </v-card-text>
-        </v-card>
+        <BgStatus />
       </v-flex>
 
       <v-flex md12 lg12 xs12>

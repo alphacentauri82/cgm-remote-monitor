@@ -48,6 +48,7 @@ export default new Vuex.Store({
     },
     UPDATE_CURRENT_TIME(state) {
       state.currentTime = Date.now()
+      state.initTime = Date.now()
     },
     /**
      * Store the Settings obtained from server
